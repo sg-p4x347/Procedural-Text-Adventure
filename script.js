@@ -21,18 +21,128 @@ function Game () {
 	//=======
 	// private
 	//=======
+	this.player = new Player('sg_p4x347','male',18,'');
+	
 	this.regionName = '';
 	this.cities = [];
 	this.population = [];
 	this.families = [];
 	this.nextId = 0;
 	this.clock = new Clock();
-	this.clock.start(20);
+	this.clock.start(200);
 	// html
 	this.main;
 	this.quests;
-	this.description;
+	this.scene;
+	this.places;
+	this.people;
+	this.things;
 
+	this.createScene = function () {
+		var self = this;
+		self.resetActions();
+		// create the description
+		if (self.player.city instanceof City) {
+			if (self.player.building instanceof Building) {
+				// in the first room of a building
+				var building = self.player.building;
+				self.scene.innerHTML = 'You are in the ' + building.name + ' ' + self.player.room.name + '.';
+				// places
+				var back = self.newAction('...Exit ' + building.name + '...',true);
+				back.addEventListener('click', function () {
+					self.player.room = null;
+					self.player.building = null;
+					self.createScene();
+				});
+				self.places.appendChild(back);
+				building.rooms.forEach(function (room) {
+					if (room.id != self.player.room.id) {
+						var place = self.newAction(room.name)
+						place.addEventListener('click', function () {
+							self.player.room = room;
+							self.createScene();
+						});
+						self.places.appendChild(place);
+					}
+				});
+			} else {
+				// in a city
+				var city = self.player.city;
+				self.scene.innerHTML = 'You are in the city of ' + city.name + '.';
+				// places
+				var back = self.newAction('...Leave ' + city.name + '...',true);
+				back.addEventListener('click', function () {
+					self.player.city = null;
+					self.createScene();
+				});
+				self.places.appendChild(back);
+				city.buildings.forEach(function (building) {
+					var place = self.newAction(building.name)
+					place.addEventListener('click', function () {
+						self.player.building = building;
+						// enter the first room
+						self.player.room = building.rooms[0];
+						self.createScene();
+					});
+					self.places.appendChild(place);
+				});
+				// people
+				city.population.forEach(function (person) {
+					var people = self.newAction(person.name + ' ' + person.surname)
+					people.addEventListener('click', function () {
+						self.player.person = person;
+						self.createScene();
+					});
+					self.people.appendChild(people);
+				})
+			}
+		} else {
+			// in the region
+			self.scene.innerHTML = 'You are in the region of ' + self.regionName + '.';
+			// places
+			self.cities.forEach(function (city) {
+				var place = self.newAction(city.name)
+				place.addEventListener('click', function () {
+					self.player.city = city;
+					self.createScene();
+				});
+				self.places.appendChild(place);
+			});
+		}
+	}
+	this.resetActions = function ()  {
+		var self = this;
+		self.clearElements(self.places);
+		var heading = document.createElement('P');
+		heading.innerHTML = 'Enter...';
+		self.places.appendChild(heading);
+		self.clearElements(self.people);
+		var heading = document.createElement('P');
+		heading.innerHTML = 'Talk to...';
+		self.people.appendChild(heading);
+		self.clearElements(self.things);
+		var heading = document.createElement('P');
+		heading.innerHTML = 'Interact with...';
+		self.things.appendChild(heading);
+		
+	}
+	this.newAction = function (name,back) {
+		var action = document.createElement('LI');
+		action.className = back ? 'button back' : 'button';
+		action.style.display = 'block';
+		action.style.textAlign = 'center';
+		var text = document.createElement('P')
+		text.className = 'buttonText';
+		text.innerHTML = name;
+
+		action.appendChild(text);
+		return action;
+	}
+	this.clearElements = function (parent) {
+		while (parent.firstChild) {
+			parent.removeChild(parent.firstChild);
+		}
+	}
 	this.generate = function () {
 		var self = this;
 		// regionName
@@ -43,7 +153,7 @@ function Game () {
 		var singleMales = [];
 		var singleFemales = [];
 		// seed families
-		for (var f = 0; f < 15; f++) {
+		for (var f = 0; f < Config.seedFamilies; f++) {
 			var surname = NameGenerator.surname();
 			var father = new Person('male',randWithin(Config.oldest-5,Config.oldest+5),probability(Config.professions),surname);
 			var mother = new Person('female',randWithin(Config.oldest-5,Config.oldest+5),probability(Config.professions),surname);
@@ -157,14 +267,49 @@ function Game () {
 		// quest tracker
 		self.quests = document.createElement('OL');
 		self.quests.className = 'group';
+		self.quests.style.width  = '30%';
 		self.quests.innerHTML = 'Quests';
 		self.main.appendChild(self.quests);
+		
+		// scene description
+		self.scene = document.createElement('DIV');
+		self.scene.className = 'group';
+		self.scene.style.width = '50%';
+		self.scene.innerHTML = 'Scene';
+		self.main.appendChild(self.scene);
+		// Places
+		self.places = document.createElement('OL');
+		self.places.className = 'group';
+		self.places.style.width  = '30%';
+		self.places.style.textAlign = 'center';
+		self.places.innerHTML = 'Places';
+		self.main.appendChild(self.places);
+		// People
+		self.people = document.createElement('OL');
+		self.people.className = 'group';
+		self.people.style.width  = '30%';
+		self.people.style.textAlign = 'center';
+		self.people.innerHTML = 'People';
+		self.main.appendChild(self.people);
+		
+		// Things
+		self.things = document.createElement('OL');
+		self.things.className = 'group';
+		self.things.style.width  = '30%';
+		self.things.style.textAlign = 'center';
+		self.things.innerHTML = 'Things';
+		self.main.appendChild(self.things);
+		
+		
 		
 		// append everything to the body
 		body.appendChild(self.main);
 		
 		// generate the world
 		self.generate();
+		
+		// start the game
+		self.createScene();
 	}
 }
 // Player class
@@ -179,6 +324,10 @@ function Player(name,gender,age,bio) {
 	this.description = '';
 	this.gender = '';
 	this.age;
+	this.city = null;
+	this.building = null;
+	this.room = null;
+	this.person = null;
 	this.bio = '';
 	this.quests = [];
 	this.inventory = [];
@@ -203,7 +352,7 @@ function City() {
 		// name
 		self.name = NameGenerator.city();
 		// create court house for mayor and sheriff
-		self.buildings.push(new Building('court house',self.name + ' court house'));
+		self.buildings.push(new Building('court house',self.name + ' ' + randWithinArray(Config['court house'].name)));
 		// create buildings for all professions
 		Config.professions.forEach(function (profession) {
 			// blacklist certain professions
@@ -215,15 +364,28 @@ function City() {
 						workers++;
 						// create a building for every 4 people that have the same profession
 						if ((workers-1) %  4 == 0) {
-							building = new Building(profession.data,self.name + ' ' + profession.data);
-							self.buildings.push(building)
+							building = new Building(profession.data,self.name + ' ' + randWithinArray(Config[profession.data].name));
+							self.buildings.push(building);
 						}
 						// set the person's workPlace
-						person.workPlace = building.id;
+						person.workPlace = building;
 					}
 				});
 			}
 		});
+		// create one home for each family
+		self.families.forEach(function (family) {
+			var home = new Building('home', family.surname + ' ' + randWithinArray(Config['home'].name));
+			self.buildings.push(home);
+			family.father.home = home;
+			family.mother.home = home;
+			// if the children aren't married they live with their parents
+			family.children.forEach(function (child) {
+				if (child.spouse === null) {
+					child.home = home;
+				}
+			});
+		})
 	}
 	//=======
 	// private
@@ -248,17 +410,20 @@ function Building(type,name) {
 	this.description = '';
 	this.type = type;
 	this.rooms = [];
-	this.population = [];
 	this.owner;
 	this.initialize = function () {
 		var self = this;
-		self.rooms.push(new Room(probability(Config[self.type].firstRoom),self.type)); // first room
+		self.rooms.push(new Room(probability(Config[self.type].firstRoom).name,self.type,true)); // first room
+		// necessary rooms
+		for (var room in Config[self.type].rooms) {
+			self.rooms.push(new Room(room,self.type));
+		}
 	}
 	// initialize
 	this.initialize();
 }
 // Room class
-function Room (type,buildingType) {
+function Room (name,buildingType,first) {
 	//=======
 	// public
 	//=======
@@ -266,15 +431,26 @@ function Room (type,buildingType) {
 	//=======
 	// private
 	//=======
-	this.type = type;
+	this.id = game.newId();
+	this.name = name;
 	this.description = '';
 	this.population = [];
-	this.initialize = function (buildingType) {
+	this.initialize = function (buildingType,first) {
 		var self = this;
-		self.description = randWithinArray(Config[buildingType].rooms[self.type].description);
+		if (first === true) {
+			Config[buildingType].firstRoom.some(function (room) {
+				if (room.data.name === self.name) {
+					self.description = randWithinArray(room.data.description);
+					return true;
+				}
+			})
+			
+		} else {
+			self.description = randWithinArray(Config[buildingType].rooms[self.name].description);
+		}
 	}
 	// initialize
-	this.initialize(buildingType);
+	this.initialize(buildingType,first);
 }
 // Family class
 function Family (father,mother) {
@@ -309,6 +485,7 @@ function Person (gender,age,profession,surname) {
 	this.biography = '';
 	this.profession = profession;
 	this.workPlace;
+	this.home;
 	this.state = 'idle';
 	this.city;
 	this.quests = [];
@@ -366,12 +543,10 @@ function Clock() {
 					self.hour = 1;
 				}
 			}
-			console.log(self.time());
-		},delay);
+		}, delay);
 	}
 	this.time = function () {
-		var half = this.hour < 12 || this.hour == 24 ? 'AM' : 'PM';
-		return (half == 'PM' ? this.hour == 12 ? this.hour:  this.hour - 12: this.hour) + ':' + (this.minute < 10 ? '0' + this.minute: this.minute) + ' ' + half;
+		return (this.hour > 12? this.hour-12: this.hour)+ ':' + (this.minute < 10 ? '0' + this.minute: this.minute) + ' ' + (this.hour == 24 || this.hour < 12 ? 'AM' : 'PM');	
 	}
 	//=======
 	// private
