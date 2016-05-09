@@ -54,11 +54,11 @@ p.heading {
 	height: auto;
 	margin: 8px;
 	
-	box-shadow: 8px 10px 5px #888888;
 	background-color: #ffad33;
 	
 	border: 0px;
 	border-left: 16px;
+	border-right: 16px;
 	border-style: solid;
 	border-color:#ffad33;
 	border-radius: 4px;
@@ -72,30 +72,20 @@ p.heading {
 .button.back:active {
 	background-color: #f73722
 }
-.buttonText {
-	/*visibility: hidden;*/
-}
 .button:hover{
-	height: auto;
-	display: block;
 	background-color: #ffffff;
-}
-.button:hover .buttonText{
-	visibility: visible;
 }
 .button:active {
 	background-color: #e68a00;
 }
-.answerList {
-	display: inline-block;
-	margin: 4px;
-}
 .main {
-	width: 100%;
+	width: auto;
+	max-width: 100%;
 	height: auto;
 	background-color: #222222;
-	display: inline-block;
+	display: table;
 	
+	padding: 4px;
 	border-radius: 16px;
 	
 	-webkit-touch-callout: none; /* iOS Safari */
@@ -108,14 +98,23 @@ p.heading {
 	background-color: #888888;
 	display: inline-block;
 	vertical-align: text-top;
+
 	padding: 4px;
 	margin: 4px;
 	
-	border-radius: 12px;
+	border-radius: 8px;
 	
 	-webkit-touch-callout: none; /* iOS Safari */
 	-webkit-user-select: none;   /* Chrome/Safari/Opera */
 	-khtml-user-select: none;    /* Konqueror */
 	-moz-user-select: none;      /* Firefox */
 	-ms-user-select: none;       /* IE/Edge */
+}
+.table {
+	border-spacing: 4px;
+	font-size: 1em;
+	margin: 0px;
+	width: auto;
+	table-layout: auto;
+	text-align: center;
 }

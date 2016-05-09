@@ -8,8 +8,8 @@ var NameGenerator = {};
 // data
 NameGenerator.components = {
 	city: {
-		prefix: ['For','Cre','Ark','Bel','Arn','Dar','Um','Shor'],
-		suffix: ['age','lin','ith','ton','las','as','win','ford','ward','don','da','bar']
+		prefix: ['For','Cre','Ark','Bel','Arn','Dar','Um','Shor','Re','Far','Shir'],
+		suffix: ['age','lin','ith','ton','las','as','win','ford','ward','don','da','bar','an']
 	},
 	region: {
 		prefix: ['For','Cre','Ark','Bel','Dord','Arn','Dar'],
@@ -65,7 +65,12 @@ NameGenerator.surname = function () {
 	return randWithinArray(NameGenerator.names.sur).toLowerCase().capitalizeFirstLetter();
 }
 function randWithin(min,max) {
-	return Math.round(Math.random() * (max-min) + min);
+	return Math.round(Math.random([{data: {name: 'lobby', description: [
+		'The room is decorated with intricate landscape paintings.',
+		'The room has several windows that keep the room lighted in the daytime.',
+		'There are some potted plants on tables next to the main exits of the room.',
+		'The doorways and walls are decorated with a very lavish dark trim and wallpaper.'
+		]}, probability: 1}]) * (max-min) + min);
 }
 // return one element of the array
 function randWithinArray (array) {
